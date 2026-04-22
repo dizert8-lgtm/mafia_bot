@@ -27,6 +27,26 @@ def init_db():
         owner_id    INTEGER,
         power       INTEGER DEFAULT 100,
         treasury    INTEGER DEFAULT 0,
+        tax_rate    INTEGER DEFAULT 0,
+        created_at  TEXT
+    )""")
+
+    # Участники клана с званиями
+    c.execute("""CREATE TABLE IF NOT EXISTS clan_members (
+        user_id     INTEGER,
+        clan_id     INTEGER,
+        rank        TEXT DEFAULT 'associate',
+        joined_at   TEXT,
+        PRIMARY KEY (user_id, clan_id)
+    )""")
+
+    # Заявки на вступление
+    c.execute("""CREATE TABLE IF NOT EXISTS join_requests (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     INTEGER,
+        clan_id     INTEGER,
+        message     TEXT,
+        status      TEXT DEFAULT 'pending',
         created_at  TEXT
     )""")
 
@@ -45,11 +65,19 @@ def init_db():
 
     # Бизнесы
     c.execute("""CREATE TABLE IF NOT EXISTS businesses (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        clan_id     INTEGER,
-        name        TEXT,
-        income      INTEGER DEFAULT 50,
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        clan_id      INTEGER,
+        name         TEXT,
+        income       INTEGER DEFAULT 50,
         last_collect TEXT
+    )""")
+
+    # Объявления от администрации
+    c.execute("""CREATE TABLE IF NOT EXISTS announcements (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        text        TEXT,
+        created_at  TEXT,
+        author_id   INTEGER
     )""")
 
     conn.commit()
