@@ -2,8 +2,10 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from database import init_db, get_conn
 import datetime
+import os
 
-TOKEN = "8774923034:AAExqkuYW1NV7wIbzmR04eKye6KS_0AitbU"  # <-- вставь свой токен сюда
+
+TOKEN = os.getenv("TOKEN")  # <-- вставь свой токен сюда
 
 # ══════════════════════════════════════════
 #  /start — регистрация
