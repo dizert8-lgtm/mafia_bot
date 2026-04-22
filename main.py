@@ -7,6 +7,7 @@ from ranks import (
     RANKS, RANK_ORDER, get_rank, has_permission,
     get_rank_label, get_next_rank, get_clan_members_by_rank
 )
+from stats import init_stats_tables, clan_stat, manage_conflict, list_conflicts
 
 TOKEN = os.getenv("TOKEN")
 ADMIN_ID = 0  # <- вставь свой Telegram ID сюда
@@ -408,7 +409,11 @@ async def announce(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def main():
     init_db()
+    init_stats_tables()
     app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("stat", clan_stat))
+    app.add_handler(CommandHandler("conflict", manage_conflict))
+    app.add_handler(CommandHandler("conflicts", list_conflicts))
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("profile", profile))
     app.add_handler(CommandHandler("create_clan", create_clan))
