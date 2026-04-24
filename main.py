@@ -15,17 +15,30 @@ from menu import get_player_rank, build_keyboard, get_rank_header, RANK_WELCOME
 from images import send_photo_message
 
 TOKEN    = os.getenv("TOKEN")
-ADMIN_ID = 0  # ← вставь свой Telegram ID
+ADMIN_ID = 6353819309  # ← твой Telegram ID
 
 def is_group(update: Update) -> bool:
-    """Проверяет — группа это или личка."""
     return update.effective_chat.type in [Chat.GROUP, Chat.SUPERGROUP]
 
 def get_keyboard(update: Update, rank):
-    """Возвращает клавиатуру только для лички."""
     if is_group(update):
         return None
     return build_keyboard(rank)
+
+# ══════════════════════════════════════════
+#  /getid — получить file_id фото (только админ)
+# ══════════════════════════════════════════
+async def getid(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+    if update.message.photo:
+        file_id = update.message.photo[-1].file_id
+        await update.message.reply_text(f"`{file_id}`", parse_mode="Markdown")
+    else:
+        await update.message.reply_text(
+            "Отправь фото с подписью /getid\n\n"
+            "Пример: отправь фото и в подписи напиши /getid"
+        )
 
 # ══════════════════════════════════════════
 #  /start
@@ -58,7 +71,6 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"{rank_desc}{ann_text}\n\n"
         f"<i>Выбери своё действие, уважаемый.</i>"
     )
-
     await send_photo_message(ctx.bot, update.effective_chat.id, "start", text, keyboard)
 
 # ══════════════════════════════════════════
@@ -69,13 +81,13 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     text = update.message.text
 
-    if text == "◈ Профиль":        await profile(update, ctx)
-    elif text == "◈ Клан":         await clan_info(update, ctx)
-    elif text == "◈ Состав":       await members(update, ctx)
-    elif text == "◈ Статистика":   await clan_stat(update, ctx)
-    elif text == "◈ Конфликты":    await list_conflicts(update, ctx)
-    elif text == "◈ Топ кланов":   await top_clans(update, ctx)
-    elif text == "◈ Заявки":       await view_requests(update, ctx)
+    if text == "◈ Профиль":           await profile(update, ctx)
+    elif text == "◈ Клан":            await clan_info(update, ctx)
+    elif text == "◈ Состав":          await members(update, ctx)
+    elif text == "◈ Статистика":      await clan_stat(update, ctx)
+    elif text == "◈ Конфликты":       await list_conflicts(update, ctx)
+    elif text == "◈ Топ кланов":      await top_clans(update, ctx)
+    elif text == "◈ Заявки":          await view_requests(update, ctx)
     elif text == "◈ Атаковать":
         await update.message.reply_text("Используй команду: /attack")
     elif text == "◈ Повысить":
@@ -138,7 +150,6 @@ async def profile(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"🏛  <b>Клан</b>         {clan_text}"
         f"{rank_text}"
     )
-
     await send_photo_message(ctx.bot, update.effective_chat.id, "profile", text, keyboard)
 
 # ══════════════════════════════════════════
@@ -184,7 +195,6 @@ async def create_clan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         c.execute("INSERT INTO clan_members (user_id, clan_id, rank, joined_at) VALUES (?, ?, 'godfather', ?)",
                   (user_id, clan_id, datetime.datetime.now().isoformat()))
         conn.commit()
-
         keyboard = get_keyboard(update, "godfather")
         text = (
             f"<b>[ Клан основан ]</b>\n"
@@ -343,9 +353,11 @@ async def handle_request(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         conn.close()
         await query.edit_message_caption("✗ Заявка отклонена.")
         try:
-            await ctx.bot.send_message(req_user_id,
+            await ctx.bot.send_message(
+                req_user_id,
                 "<b>В приёме отказано.</b>\n\n<i>Семья приняла решение не в твою пользу.</i>",
-                parse_mode="HTML")
+                parse_mode="HTML"
+            )
         except: pass
 
 # ══════════════════════════════════════════
@@ -373,14 +385,14 @@ async def members(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     for username, rank, uid in members_list:
         lines += f"{get_rank_label(rank)}\n    @{username}\n\n"
 
+    rank = get_player_rank(user_id)
+    keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Состав семьи — {clan[0]} ]</b>\n"
         f"{'─' * 22}\n\n"
         f"{lines}"
         f"<i>Каждый знает своё место.</i>"
     )
-    rank = get_player_rank(user_id)
-    keyboard = get_keyboard(update, rank)
     await send_photo_message(ctx.bot, update.effective_chat.id, "members", text, keyboard)
 
 # ══════════════════════════════════════════
@@ -587,7 +599,8 @@ async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"  /members       — состав семьи\n"
         f"  /stat          — статистика клана\n"
         f"  /top           — рейтинг семей\n"
-        f"  /conflicts     — список конфликтов\n\n"
+        f"  /conflicts     — список конфликтов\n"
+        f"  /help          — этот инструктаж\n\n"
         f"<b>Вступление:</b>\n"
         f"  /create_clan   — основать клан (20,000)\n"
         f"  /request_join  — подать заявку в клан\n\n"
@@ -597,7 +610,7 @@ async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         f"  /kick          — исключить участника\n\n"
         f"<b>Только Крёстный отец:</b>\n"
         f"  /war           — объявить войну\n"
-        f"  /conflict      — добавить конфликт\n\n"
+        f"  /conflict      — управлять конфликтами\n\n"
         f"<i>Семья — это закон.</i>"
     )
     await send_photo_message(ctx.bot, update.effective_chat.id, "start", text, keyboard)
@@ -660,6 +673,7 @@ def main():
     app.add_handler(CommandHandler("stat", clan_stat))
     app.add_handler(CommandHandler("conflict", manage_conflict))
     app.add_handler(CommandHandler("conflicts", list_conflicts))
+    app.add_handler(CommandHandler("getid", getid))
     app.add_handler(CallbackQueryHandler(handle_request, pattern="^(accept|decline)_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_handler))
 
