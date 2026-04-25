@@ -341,6 +341,7 @@ async def unban_player(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conn.close()
 
     await update.message.reply_text(f"✓ @{username} разблокирован.")
+    
     async def msg_all(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
      if not is_admin(update.effective_user.id):
         return
@@ -352,6 +353,7 @@ async def unban_player(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ); return
 
     text = " ".join(ctx.args)
+    
     conn = get_conn()
     c = conn.cursor()
     c.execute("SELECT user_id FROM players")
@@ -361,8 +363,13 @@ async def unban_player(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     sent = 0
     for (pid,) in all_players:
         try:
-            await ctx.bot.send_message(pid, text)
+            await ctx.bot.send_message(
+                pid,
+                f"📢 {text}",
+                parse_mode="HTML"
+            )
             sent += 1
-        except: pass
+        except:
+            pass
 
     await update.message.reply_text(f"✓ Отправлено {sent} игрокам.")
