@@ -16,7 +16,7 @@ from images import send_photo_message
 from economy import init_economy_tables, rob, work, casino, balance
 from admin import (adminhelp, godmode, addcoins, removecoins,
                    setlevel, resetcd, players_list, clans_list,
-                   ban_player, unban_player)
+                   ban_player, unban_player, msg_all)
 from economy import (init_economy_tables, rob, work, casino, balance)
 
 
@@ -668,6 +668,7 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
     
+    app.add_handler(CommandHandler("msg", msg_all))
     app.add_handler(CommandHandler("rob", rob))
     app.add_handler(CommandHandler("work", work))
     app.add_handler(CommandHandler("casino", casino))
