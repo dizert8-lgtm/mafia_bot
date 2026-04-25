@@ -13,6 +13,7 @@ from ranks import (
 from stats import init_stats_tables, clan_stat, manage_conflict, list_conflicts
 from menu import get_player_rank, build_keyboard, get_rank_header, RANK_WELCOME
 from images import send_photo_message
+from economy import init_economy_tables, rob, work, casino, balance
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309  # ← твой Telegram ID
@@ -658,9 +659,14 @@ async def announce(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 def main():
     init_db()
     init_stats_tables()
+    init_economy_tables()
 
     app = Application.builder().token(TOKEN).build()
     
+    app.add_handler(CommandHandler("rob", rob))
+    app.add_handler(CommandHandler("work", work))
+    app.add_handler(CommandHandler("casino", casino))
+    app.add_handler(CommandHandler("balance", balance))
     app.add_handler(CommandHandler("getid", getid))
     app.add_handler(MessageHandler(filters.PHOTO & filters.Caption(["/getid"]), getid))
     app.add_handler(CommandHandler("start", start))
