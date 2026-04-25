@@ -1,41 +1,79 @@
 """
 Картинки для каждого действия бота.
-Все фото в стиле нуар/мафия с Unsplash и других бесплатных сервисов.
+Фото в стиле мафия/нуар.
+
+Распределение по событиям:
+1  (мафиози с пистолетом ночью)  → start, help
+2  (расстрел в лесу)             → war, conflict
+3  (встреча боссов у машин)      → create_clan, truce
+4  (совещание за столом)         → clan_info, members
+5  (допрос у машин)              → kick, request
+6  (Peaky Blinders улица)        → conflicts, stat
+7  (босс за столом с охраной)    → profile, promote
+8  (перестрелка в баре)          → attack, war
+9  (тёмный зал заседаний)        → top, announce
+10 (казино с игроками)           → top, business
+11 (зал казино)                  → stat, treasury
+12 (вокзал перестрелка)          → war, attack
 """
 
 IMAGES = {
-    # Главный экран
-    "start":        "https://images.unsplash.com/photo-1509822929464-92b183d4fe93?w=800&q=80",
-    # Досье / профиль
-    "profile":      "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&q=80",
-    # Создание клана
-    "create_clan":  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-    # Информация о клане
-    "clan_info":    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80",
-    # Состав клана
-    "members":      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80",
-    # Топ кланов
-    "top":          "https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&q=80",
-    # Статистика
-    "stat":         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80",
-    # Война объявлена
-    "war":          "https://images.unsplash.com/photo-1509822929464-92b183d4fe93?w=800&q=80",
-    # Победа в войне
-    "win":          "https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=800&q=80",
-    # Поражение
-    "lose":         "https://images.unsplash.com/photo-1516274626895-055a99214f08?w=800&q=80",
-    # Вступление в клан
-    "join":         "https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?w=800&q=80",
-    # Повышение звания
-    "promote":      "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
-    # Исключение
-    "kick":         "https://images.unsplash.com/photo-1516534775068-ba3e7458af70?w=800&q=80",
-    # Объявление
-    "announce":     "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
-    # Конфликт
-    "conflict":     "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80",
-    # Заявка
-    "request":      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80",
+    # Главный экран — мафиози с пистолетом ночью
+    "start":        "https://i.imgur.com/8JQaoMg.jpeg",
+
+    # Профиль — босс за столом с охраной
+    "profile":      "https://i.imgur.com/AI78sgH.jpeg",
+
+    # Создание клана — встреча боссов у машин
+    "create_clan":  "https://i.imgur.com/fROXbOL.jpeg",
+
+    # Информация о клане — совещание за столом
+    "clan_info":    "https://i.imgur.com/ciGcwbb.jpeg",
+
+    # Состав клана — совещание за столом
+    "members":      "https://i.imgur.com/ciGcwbb.jpeg",
+
+    # Топ кланов — тёмный зал заседаний
+    "top":          "https://i.imgur.com/a61q4yM.jpeg",
+
+    # Статистика — Peaky Blinders улица
+    "stat":         "https://i.imgur.com/tOj0tKV.jpeg",
+
+    # Война — расстрел в лесу
+    "war":          "https://i.imgur.com/RtDvNgq.jpeg",
+
+    # Атака — перестрелка в баре
+    "attack":       "https://i.imgur.com/WB90XC8.jpeg",
+
+    # Победа — казино с игроками
+    "win":          "https://i.imgur.com/goljFZW.jpeg",
+
+    # Поражение — вокзал перестрелка
+    "lose":         "https://i.imgur.com/I5tYAjH.jpeg",
+
+    # Вступление — допрос у машин
+    "join":         "https://i.imgur.com/s8XKzB9.jpeg",
+
+    # Заявка — допрос у машин
+    "request":      "https://i.imgur.com/s8XKzB9.jpeg",
+
+    # Повышение — босс за столом
+    "promote":      "https://i.imgur.com/AI78sgH.jpeg",
+
+    # Исключение — расстрел в лесу
+    "kick":         "https://i.imgur.com/RtDvNgq.jpeg",
+
+    # Объявление — тёмный зал заседаний
+    "announce":     "https://i.imgur.com/a61q4yM.jpeg",
+
+    # Конфликт — Peaky Blinders улица
+    "conflict":     "https://i.imgur.com/tOj0tKV.jpeg",
+
+    # Помощь — мафиози с пистолетом
+    "help":         "https://i.imgur.com/8JQaoMg.jpeg",
+
+    # Казино/бизнес
+    "business":     "https://i.imgur.com/4gH6MSI.jpeg",
 }
 
 async def send_photo_message(bot, chat_id: int, image_key: str, text: str, reply_markup=None):
@@ -61,7 +99,6 @@ async def send_photo_message(bot, chat_id: int, image_key: str, text: str, reply
                 parse_mode="HTML"
             )
     except Exception:
-        # Если фото не загрузилось — отправляем текст
         try:
             await bot.send_message(
                 chat_id=chat_id,
