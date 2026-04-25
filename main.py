@@ -14,6 +14,11 @@ from stats import init_stats_tables, clan_stat, manage_conflict, list_conflicts
 from menu import get_player_rank, build_keyboard, get_rank_header, RANK_WELCOME
 from images import send_photo_message
 from economy import init_economy_tables, rob, work, casino, balance
+from admin import (adminhelp, godmode, addcoins, removecoins,
+                   setlevel, resetcd, players_list, clans_list,
+                   ban_player, unban_player)
+from economy import (init_economy_tables, rob, work, casino, balance)
+
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309  # ← твой Telegram ID
@@ -663,6 +668,20 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
     
+    app.add_handler(CommandHandler("rob", rob))
+    app.add_handler(CommandHandler("work", work))
+    app.add_handler(CommandHandler("casino", casino))
+    app.add_handler(CommandHandler("balance", balance))
+    app.add_handler(CommandHandler("adminhelp", adminhelp))
+    app.add_handler(CommandHandler("godmode", godmode))
+    app.add_handler(CommandHandler("addcoins", addcoins))
+    app.add_handler(CommandHandler("removecoins", removecoins))
+    app.add_handler(CommandHandler("setlevel", setlevel))
+    app.add_handler(CommandHandler("resetcd", resetcd))
+    app.add_handler(CommandHandler("players", players_list))
+    app.add_handler(CommandHandler("clans", clans_list))
+    app.add_handler(CommandHandler("ban", ban_player))
+    app.add_handler(CommandHandler("unban", unban_player))
     app.add_handler(CommandHandler("rob", rob))
     app.add_handler(CommandHandler("work", work))
     app.add_handler(CommandHandler("casino", casino))
