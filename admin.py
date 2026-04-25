@@ -342,8 +342,8 @@ async def unban_player(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"✓ @{username} разблокирован.")
     
-    async def msg_all(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-     if not is_admin(update.effective_user.id):
+async def msg_all(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update.effective_user.id):
         return
 
     if not ctx.args:
@@ -365,7 +365,7 @@ async def unban_player(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         try:
             await ctx.bot.send_message(
                 pid,
-                f"📢 {text}",
+                f"{text}",
                 parse_mode="HTML"
             )
             sent += 1
