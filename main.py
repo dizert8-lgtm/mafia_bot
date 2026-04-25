@@ -31,14 +31,17 @@ def get_keyboard(update: Update, rank):
 async def getid(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
+    
+    # Случай 1: фото отправлено с подписью /getid
     if update.message.photo:
         file_id = update.message.photo[-1].file_id
         await update.message.reply_text(f"`{file_id}`", parse_mode="Markdown")
-    else:
-        await update.message.reply_text(
-            "Отправь фото с подписью /getid\n\n"
-            "Пример: отправь фото и в подписи напиши /getid"
-        )
+        return
+    
+    # Случай 2: /getid отправлен отдельно — просим фото
+    await update.message.reply_text(
+        "Отправь фото с подписью /getid"
+    )
 
 # ══════════════════════════════════════════
 #  /start
@@ -657,7 +660,9 @@ def main():
     init_stats_tables()
 
     app = Application.builder().token(TOKEN).build()
-
+    
+    app.add_handler(CommandHandler("getid", getid))
+    app.add_handler(MessageHandler(filters.PHOTO & filters.Caption(["/getid"]), getid))
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("profile", profile))
     app.add_handler(CommandHandler("help", help_cmd))
