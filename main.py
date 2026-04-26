@@ -19,6 +19,7 @@ from admin import (
     setlevel, resetcd, players_list, clans_list,
     ban_player, unban_player, msg_all
 )
+from wars import declare_war, attack, war_status, truce, handle_truce
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309
@@ -638,6 +639,11 @@ def main():
     app = Application.builder().token(TOKEN).build()
 
     # Публичные команды с префиксом mf_
+    app.add_handler(CommandHandler("mf_war",        declare_war))
+    app.add_handler(CommandHandler("mf_attack",     attack))
+    app.add_handler(CommandHandler("mf_war_status", war_status))
+    app.add_handler(CommandHandler("mf_truce",      truce))
+    app.add_handler(CallbackQueryHandler(handle_truce, pattern="^truce_"))
     app.add_handler(CommandHandler("mf_start",       start))
     app.add_handler(CommandHandler("mf_profile",     profile))
     app.add_handler(CommandHandler("mf_clan",        clan_info))
