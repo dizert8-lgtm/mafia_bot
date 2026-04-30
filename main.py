@@ -10,16 +10,19 @@ from ranks import (
     get_rank, has_permission, get_rank_label,
     get_next_rank, get_clan_members_by_rank
 )
-from stats import init_stats_tables, clan_stat, manage_conflict, list_conflicts
+from stats import (
+    init_stats_tables, clan_stat, manage_conflict,
+    list_conflicts, clan_announce
+)
 from menu import get_player_rank, build_keyboard, get_rank_header, RANK_WELCOME
 from images import send_photo_message
 from economy import init_economy_tables, rob, work, casino, balance
+from wars import declare_war, attack, war_status, truce, handle_truce
 from admin import (
     adminhelp, godmode, addcoins, removecoins,
     setlevel, resetcd, players_list, clans_list,
     ban_player, unban_player, msg_all
 )
-from wars import declare_war, attack, war_status, truce, handle_truce
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309
@@ -44,7 +47,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conn.commit()
     conn.close()
 
-    rank = get_player_rank(user.id)
+    rank     = get_player_rank(user.id)
     keyboard = get_keyboard(update, rank)
 
     conn = get_conn()
@@ -52,8 +55,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     c.execute("SELECT text FROM announcements ORDER BY id DESC LIMIT 1")
     ann = c.fetchone()
     conn.close()
-    ann_text = f"\n\n📢 <b>Последнее объявление:</b>\n{ann[0]}" if ann else ""
-
+    ann_text    = f"\n\n📢 <b>Последнее объявление:</b>\n{ann[0]}" if ann else ""
     rank_desc   = RANK_WELCOME.get(rank, "")
     rank_header = get_rank_header(rank)
 
@@ -66,22 +68,22 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await send_photo_message(ctx.bot, update.effective_chat.id, "start", text, keyboard)
 
 # ══════════════════════════════════════════
-#  Обработчик кнопок меню (только личка)
+#  Обработчик кнопок меню
 # ══════════════════════════════════════════
 async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if is_group(update):
         return
     text = update.message.text
 
-    if text == "◈ Профиль":           await profile(update, ctx)
-    elif text == "◈ Клан":            await clan_info(update, ctx)
-    elif text == "◈ Состав":          await members(update, ctx)
-    elif text == "◈ Статистика":      await clan_stat(update, ctx)
-    elif text == "◈ Конфликты":       await list_conflicts(update, ctx)
-    elif text == "◈ Топ кланов":      await top_clans(update, ctx)
-    elif text == "◈ Заявки":          await view_requests(update, ctx)
+    if text == "◈ Профиль":          await profile(update, ctx)
+    elif text == "◈ Клан":           await clan_info(update, ctx)
+    elif text == "◈ Состав":         await members(update, ctx)
+    elif text == "◈ Статистика":     await clan_stat(update, ctx)
+    elif text == "◈ Конфликты":      await list_conflicts(update, ctx)
+    elif text == "◈ Топ кланов":     await top_clans(update, ctx)
+    elif text == "◈ Заявки":         await view_requests(update, ctx)
     elif text == "◈ Атаковать":
-        await update.message.reply_text("Используй: /mf_rob или /mf_work")
+        await update.message.reply_text("Используй: /mf_attack")
     elif text == "◈ Повысить":
         await update.message.reply_text("Используй: /mf_promote @username")
     elif text == "◈ Выгнать":
@@ -89,7 +91,7 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     elif text == "◈ Объявить войну":
         await update.message.reply_text("Используй: /mf_war <название клана>")
     elif text == "◈ Объявление":
-        await update.message.reply_text("Используй: /announce <текст>")
+        await update.message.reply_text("Используй: /mf_clan_announce <текст>")
     elif text == "◈ Создать клан":
         await update.message.reply_text(
             "Используй: /mf_create_clan <название>\n\n💰 Стоимость: 20,000 монет"
@@ -125,7 +127,7 @@ async def profile(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             rank_text = f"\n🏅  <b>Звание</b>      {get_rank_label(rank)}"
             clan_text = clan[0]
 
-    rank = get_player_rank(user_id)
+    rank     = get_player_rank(user_id)
     keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Досье ]</b>\n"
@@ -150,6 +152,7 @@ async def create_clan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     c.execute("SELECT * FROM players WHERE user_id=?", (user_id,))
     player = c.fetchone()
     conn.close()
+
     if not player:
         await update.message.reply_text("Напиши /mf_start"); return
     if player[2]:
@@ -157,8 +160,8 @@ async def create_clan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if player[4] < 20000:
         await update.message.reply_text(
             f"<b>Недостаточно средств.</b>\n\n"
-            f"💰  Нужно:   20,000 монет\n"
-            f"💰  Есть:    {player[4]:,} монет",
+            f"💰  Нужно:  20,000 монет\n"
+            f"💰  Есть:   {player[4]:,} монет",
             parse_mode="HTML"); return
     if not ctx.args:
         await update.message.reply_text(
@@ -172,21 +175,21 @@ async def create_clan(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conn = get_conn()
     c = conn.cursor()
     try:
-        c.execute("INSERT INTO clans (name, owner_id, created_at) VALUES (?, ?, ?)",
+        c.execute("INSERT INTO clans (name, owner_id, created_at) VALUES (?,?,?)",
                   (name, user_id, datetime.datetime.now().isoformat()))
         clan_id = c.lastrowid
         c.execute("UPDATE players SET clan_id=?, coins=coins-20000 WHERE user_id=?",
                   (clan_id, user_id))
-        c.execute("INSERT INTO clan_members (user_id, clan_id, rank, joined_at) VALUES (?, ?, 'godfather', ?)",
+        c.execute("INSERT INTO clan_members (user_id, clan_id, rank, joined_at) VALUES (?,?,'godfather',?)",
                   (user_id, clan_id, datetime.datetime.now().isoformat()))
         conn.commit()
         keyboard = get_keyboard(update, "godfather")
         text = (
             f"<b>[ Клан основан ]</b>\n"
             f"{'─' * 22}\n\n"
-            f"🏛  <b>Название</b>     {name}\n"
-            f"🎩  <b>Звание</b>       {get_rank_label('godfather')}\n"
-            f"💰  <b>Оплачено</b>     20,000 монет\n\n"
+            f"🏛  <b>Название</b>    {name}\n"
+            f"🎩  <b>Звание</b>      {get_rank_label('godfather')}\n"
+            f"💰  <b>Оплачено</b>    20,000 монет\n\n"
             f"<i>Власть в твоих руках. Распоряжайся мудро.</i>"
         )
         await send_photo_message(ctx.bot, update.effective_chat.id, "create_clan", text, keyboard)
@@ -205,6 +208,7 @@ async def request_join(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     c.execute("SELECT * FROM players WHERE user_id=?", (user_id,))
     player = c.fetchone()
     conn.close()
+
     if not player:
         await update.message.reply_text("Напиши /mf_start"); return
     if player[2]:
@@ -227,12 +231,13 @@ async def request_join(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
               (user_id, clan[0]))
     if c.fetchone():
         conn.close()
-        await update.message.reply_text("Заявка уже отправлена. Ожидай решения."); return
+        await update.message.reply_text("Заявка уже отправлена."); return
 
-    c.execute("INSERT INTO join_requests (user_id, clan_id, message, created_at) VALUES (?, ?, ?, ?)",
+    c.execute("INSERT INTO join_requests (user_id, clan_id, message, created_at) VALUES (?,?,?,?)",
               (user_id, clan[0], "Прошу принять в клан", datetime.datetime.now().isoformat()))
     conn.commit()
     conn.close()
+
     text = (
         f"<b>[ Заявка отправлена ]</b>\n"
         f"{'─' * 22}\n\n"
@@ -314,7 +319,7 @@ async def handle_request(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if action == "accept":
         c.execute("UPDATE join_requests SET status='accepted' WHERE id=?", (req_id,))
         c.execute("UPDATE players SET clan_id=? WHERE user_id=?", (clan_id, req_user_id))
-        c.execute("INSERT OR IGNORE INTO clan_members (user_id, clan_id, rank, joined_at) VALUES (?, ?, 'associate', ?)",
+        c.execute("INSERT OR IGNORE INTO clan_members (user_id, clan_id, rank, joined_at) VALUES (?,?,'associate',?)",
                   (req_user_id, clan_id, datetime.datetime.now().isoformat()))
         conn.commit()
         conn.close()
@@ -365,7 +370,7 @@ async def members(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     for username, rank, uid in members_list:
         lines += f"{get_rank_label(rank)}\n    @{username}\n\n"
 
-    rank = get_player_rank(user_id)
+    rank     = get_player_rank(user_id)
     keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Состав семьи — {clan[0]} ]</b>\n"
@@ -403,7 +408,7 @@ async def promote(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         conn.close()
         await update.message.reply_text("Игрок не найден."); return
 
-    target_id = target[0]
+    target_id    = target[0]
     current_rank = get_rank(target_id, clan_id)
     if not current_rank:
         conn.close()
@@ -513,12 +518,12 @@ async def clan_info(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     count = c.fetchone()[0]
     conn.close()
 
-    rank = get_rank(user_id, clan_id)
+    rank         = get_rank(user_id, clan_id)
+    keyboard     = get_keyboard(update, rank)
     treasury_text = ""
     if has_permission(user_id, clan_id, "view_treasury"):
         treasury_text = f"\n💰  <b>Казна</b>        {clan[4]:,} монет"
 
-    keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Семья — {clan[1]} ]</b>\n"
         f"{'─' * 22}\n\n"
@@ -543,11 +548,11 @@ async def top_clans(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Кланов пока нет."); return
 
     places = ["I","II","III","IV","V","VI","VII","VIII","IX","X"]
-    lines = ""
+    lines  = ""
     for i, (name, power) in enumerate(clans):
         lines += f"  {places[i]}.  {name}  —  {power}\n"
 
-    rank = get_player_rank(update.effective_user.id)
+    rank     = get_player_rank(update.effective_user.id)
     keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Рейтинг семей ]</b>\n"
@@ -561,41 +566,46 @@ async def top_clans(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 #  /mf_help
 # ══════════════════════════════════════════
 async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    rank = get_player_rank(user_id)
+    user_id  = update.effective_user.id
+    rank     = get_player_rank(user_id)
     keyboard = get_keyboard(update, rank)
     text = (
         f"<b>[ Инструктаж ]</b>\n"
         f"{'─' * 22}\n\n"
         f"<b>Основные:</b>\n"
-        f"  /mf_start        — главное меню\n"
-        f"  /mf_profile      — твоё досье\n"
-        f"  /mf_clan         — информация о клане\n"
-        f"  /mf_members      — состав семьи\n"
-        f"  /mf_stat         — статистика\n"
-        f"  /mf_top          — рейтинг семей\n"
-        f"  /mf_help         — этот инструктаж\n\n"
+        f"  /mf_start         — главное меню\n"
+        f"  /mf_profile       — твоё досье\n"
+        f"  /mf_clan          — информация о клане\n"
+        f"  /mf_members       — состав семьи\n"
+        f"  /mf_stat          — статистика клана\n"
+        f"  /mf_top           — рейтинг семей\n\n"
         f"<b>Заработок:</b>\n"
-        f"  /mf_rob          — ограбление (2ч)\n"
-        f"  /mf_work         — работа (4ч)\n"
-        f"  /mf_casino 500   — казино (6ч)\n"
-        f"  /mf_balance      — баланс и кулдауны\n\n"
-        f"<b>Вступление:</b>\n"
-        f"  /mf_create_clan  — основать клан\n"
-        f"  /mf_join         — подать заявку\n\n"
-        f"<b>Управление (Капо+):</b>\n"
-        f"  /mf_requests     — входящие заявки\n"
-        f"  /mf_promote      — повысить\n"
-        f"  /mf_kick         — исключить\n\n"
-        f"<b>Только Крёстный отец:</b>\n"
-        f"  /mf_war          — объявить войну\n"
-        f"  /mf_conflict     — конфликты\n\n"
+        f"  /mf_rob           — ограбление (2ч)\n"
+        f"  /mf_work          — работа (4ч)\n"
+        f"  /mf_casino 500    — казино (6ч)\n"
+        f"  /mf_balance       — баланс\n\n"
+        f"<b>Клан:</b>\n"
+        f"  /mf_create_clan   — основать клан\n"
+        f"  /mf_join          — подать заявку\n"
+        f"  /mf_requests      — заявки (Капо+)\n"
+        f"  /mf_promote       — повысить\n"
+        f"  /mf_kick          — исключить\n\n"
+        f"<b>Война:</b>\n"
+        f"  /mf_war           — объявить войну\n"
+        f"  /mf_attack        — атаковать (1ч)\n"
+        f"  /mf_war_status    — статус войны\n"
+        f"  /mf_truce         — перемирие\n\n"
+        f"<b>Конфликты:</b>\n"
+        f"  /mf_conflict      — добавить конфликт\n"
+        f"  /mf_conflicts     — список конфликтов\n\n"
+        f"<b>Объявления:</b>\n"
+        f"  /mf_clan_announce — объявление клану\n\n"
         f"<i>Семья — это закон.</i>"
     )
     await send_photo_message(ctx.bot, update.effective_chat.id, "start", text, keyboard)
 
 # ══════════════════════════════════════════
-#  /announce (админ)
+#  /announce (глобальный — только админ)
 # ══════════════════════════════════════════
 async def announce(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -607,7 +617,7 @@ async def announce(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text_msg = " ".join(ctx.args)
     conn = get_conn()
     c = conn.cursor()
-    c.execute("INSERT INTO announcements (text, created_at, author_id) VALUES (?, ?, ?)",
+    c.execute("INSERT INTO announcements (text, created_at, author_id) VALUES (?,?,?)",
               (text_msg, datetime.datetime.now().isoformat(), user_id))
     c.execute("SELECT user_id FROM players")
     all_players = c.fetchall()
@@ -638,49 +648,51 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
 
-    # Публичные команды с префиксом mf_
-    app.add_handler(CommandHandler("mf_war",        declare_war))
-    app.add_handler(CommandHandler("mf_attack",     attack))
-    app.add_handler(CommandHandler("mf_war_status", war_status))
-    app.add_handler(CommandHandler("mf_truce",      truce))
-    app.add_handler(CallbackQueryHandler(handle_truce, pattern="^truce_"))
-    app.add_handler(CommandHandler("mf_start",       start))
-    app.add_handler(CommandHandler("mf_profile",     profile))
-    app.add_handler(CommandHandler("mf_clan",        clan_info))
-    app.add_handler(CommandHandler("mf_members",     members))
-    app.add_handler(CommandHandler("mf_top",         top_clans))
-    app.add_handler(CommandHandler("mf_help",        help_cmd))
-    app.add_handler(CommandHandler("mf_create_clan", create_clan))
-    app.add_handler(CommandHandler("mf_join",        request_join))
-    app.add_handler(CommandHandler("mf_requests",    view_requests))
-    app.add_handler(CommandHandler("mf_promote",     promote))
-    app.add_handler(CommandHandler("mf_kick",        kick))
-    app.add_handler(CommandHandler("mf_stat",        clan_stat))
-    app.add_handler(CommandHandler("mf_conflict",    manage_conflict))
-    app.add_handler(CommandHandler("mf_conflicts",   list_conflicts))
-    app.add_handler(CommandHandler("mf_rob",         rob))
-    app.add_handler(CommandHandler("mf_work",        work))
-    app.add_handler(CommandHandler("mf_casino",      casino))
-    app.add_handler(CommandHandler("mf_balance",     balance))
+    # Публичные команды
+    app.add_handler(CommandHandler("mf_start",        start))
+    app.add_handler(CommandHandler("start",            start))
+    app.add_handler(CommandHandler("mf_profile",      profile))
+    app.add_handler(CommandHandler("mf_clan",         clan_info))
+    app.add_handler(CommandHandler("mf_members",      members))
+    app.add_handler(CommandHandler("mf_top",          top_clans))
+    app.add_handler(CommandHandler("mf_help",         help_cmd))
+    app.add_handler(CommandHandler("mf_create_clan",  create_clan))
+    app.add_handler(CommandHandler("mf_join",         request_join))
+    app.add_handler(CommandHandler("mf_requests",     view_requests))
+    app.add_handler(CommandHandler("mf_promote",      promote))
+    app.add_handler(CommandHandler("mf_kick",         kick))
+    app.add_handler(CommandHandler("mf_stat",         clan_stat))
+    app.add_handler(CommandHandler("mf_conflict",     manage_conflict))
+    app.add_handler(CommandHandler("mf_conflicts",    list_conflicts))
+    app.add_handler(CommandHandler("mf_clan_announce",clan_announce))
+    app.add_handler(CommandHandler("mf_rob",          rob))
+    app.add_handler(CommandHandler("mf_work",         work))
+    app.add_handler(CommandHandler("mf_casino",       casino))
+    app.add_handler(CommandHandler("mf_balance",      balance))
+    app.add_handler(CommandHandler("mf_war",          declare_war))
+    app.add_handler(CommandHandler("mf_attack",       attack))
+    app.add_handler(CommandHandler("mf_war_status",   war_status))
+    app.add_handler(CommandHandler("mf_truce",        truce))
 
-    # Обратная совместимость — /start тоже работает в личке
-    app.add_handler(CommandHandler("start",          start))
+    # Админские команды
+    app.add_handler(CommandHandler("announce",        announce))
+    app.add_handler(CommandHandler("msg",             msg_all))
+    app.add_handler(CommandHandler("godmode",         godmode))
+    app.add_handler(CommandHandler("addcoins",        addcoins))
+    app.add_handler(CommandHandler("removecoins",     removecoins))
+    app.add_handler(CommandHandler("setlevel",        setlevel))
+    app.add_handler(CommandHandler("resetcd",         resetcd))
+    app.add_handler(CommandHandler("players",         players_list))
+    app.add_handler(CommandHandler("clans",           clans_list))
+    app.add_handler(CommandHandler("ban",             ban_player))
+    app.add_handler(CommandHandler("unban",           unban_player))
+    app.add_handler(CommandHandler("adminhelp",       adminhelp))
 
-    # Админские команды (без префикса)
-    app.add_handler(CommandHandler("announce",       announce))
-    app.add_handler(CommandHandler("msg",            msg_all))
-    app.add_handler(CommandHandler("godmode",        godmode))
-    app.add_handler(CommandHandler("addcoins",       addcoins))
-    app.add_handler(CommandHandler("removecoins",    removecoins))
-    app.add_handler(CommandHandler("setlevel",       setlevel))
-    app.add_handler(CommandHandler("resetcd",        resetcd))
-    app.add_handler(CommandHandler("players",        players_list))
-    app.add_handler(CommandHandler("clans",          clans_list))
-    app.add_handler(CommandHandler("ban",            ban_player))
-    app.add_handler(CommandHandler("unban",          unban_player))
-    app.add_handler(CommandHandler("adminhelp",      adminhelp))
-
+    # Callback кнопки
     app.add_handler(CallbackQueryHandler(handle_request, pattern="^(accept|decline)_"))
+    app.add_handler(CallbackQueryHandler(handle_truce,   pattern="^truce_"))
+
+    # Кнопки меню
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, menu_handler))
 
     print("Бот запущен.")
