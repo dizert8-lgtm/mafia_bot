@@ -23,6 +23,10 @@ from admin import (
     setlevel, resetcd, players_list, clans_list,
     ban_player, unban_player, msg_all
 )
+from clan_system import (
+    init_clan_system_tables, check_passive_income,
+    leave_clan, handle_leave, demote
+)
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309
@@ -645,10 +649,14 @@ def main():
     init_db()
     init_stats_tables()
     init_economy_tables()
+    init_clan_system_tables()
 
     app = Application.builder().token(TOKEN).build()
 
     # Публичные команды
+    app.add_handler(CommandHandler("mf_leave",  leave_clan))
+    app.add_handler(CommandHandler("mf_demote", demote))
+    app.add_handler(CallbackQueryHandler(handle_leave, pattern="^leave_"))
     app.add_handler(CommandHandler("mf_start",        start))
     app.add_handler(CommandHandler("start",            start))
     app.add_handler(CommandHandler("mf_profile",      profile))
