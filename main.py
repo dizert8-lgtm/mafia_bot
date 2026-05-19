@@ -27,6 +27,7 @@ from clan_system import (
     init_clan_system_tables, check_passive_income,
     leave_clan, handle_leave, demote
 )
+from shop import init_shop_tables, shop_main, shop_callback, inventory_cmd
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309
@@ -650,11 +651,19 @@ def main():
     init_stats_tables()
     init_economy_tables()
     init_clan_system_tables()
+    init_shop_tables()
 
     app = Application.builder().token(TOKEN).build()
+    async def on_startup(app):
+        await check_passive_income(app.bot)
+
+    app.post_init = on_startup
 
     # Публичные команды
     app.add_handler(CommandHandler("mf_leave",  leave_clan))
+    app.add_handler(CommandHandler("mf_shop",      shop_main))
+    app.add_handler(CommandHandler("mf_inventory", inventory_cmd))
+    app.add_handler(CallbackQueryHandler(shop_callback, pattern="^shop_"))
     app.add_handler(CommandHandler("mf_demote", demote))
     app.add_handler(CallbackQueryHandler(handle_leave, pattern="^leave_"))
     app.add_handler(CommandHandler("mf_start",        start))
