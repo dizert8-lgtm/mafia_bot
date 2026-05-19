@@ -95,10 +95,10 @@ HOUSES = [
 ]
 
 CATEGORIES = {
-    "weapons": {"name":"⚓︎ Оружие",       "items":WEAPONS},
-    "cars":    {"name":"⛟ Машины",        "items":CARS},
-    "watches": {"name":"⏲ Часы",          "items":WATCHES},
-    "houses":  {"name":"🏙 Недвижимость", "items":HOUSES},
+    "weapons": {"name":"➢ Оружие",       "items":WEAPONS},
+    "cars":    {"name":"➢ Машины",        "items":CARS},
+    "watches": {"name":"➢ Часы",          "items":WATCHES},
+    "houses":  {"name":"➢ Недвижимость", "items":HOUSES},
 }
 
 ALL_ITEMS = {item["id"]: item for cat in CATEGORIES.values() for item in cat["items"]}
@@ -140,11 +140,11 @@ async def shop_main(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     owned  = get_owned_items(user_id)
     coins  = player[0]
     keyboard = [[
-        InlineKeyboardButton("⚓︎︎ Оружие",       callback_data="shop_cat_weapons"),
-        InlineKeyboardButton("⛟ Машины",        callback_data="shop_cat_cars"),
+        InlineKeyboardButton("➢︎ Оружие",       callback_data="shop_cat_weapons"),
+        InlineKeyboardButton("➢ Машины",        callback_data="shop_cat_cars"),
     ],[
-        InlineKeyboardButton("⏱ Часы",          callback_data="shop_cat_watches"),
-        InlineKeyboardButton("🏙 Недвижимость", callback_data="shop_cat_houses"),
+        InlineKeyboardButton("➢ Часы",          callback_data="shop_cat_watches"),
+        InlineKeyboardButton("➢ Недвижимость", callback_data="shop_cat_houses"),
     ],[
         InlineKeyboardButton("➢ Моя коллекция", callback_data="shop_inventory"),
     ]]
@@ -267,10 +267,10 @@ async def _show_inventory(query, user_id: int):
     total = sum(ALL_ITEMS[i]["price"] for i in owned if i in ALL_ITEMS)
 
     text = f"<b>[ Коллекция ]</b>\n{'─'*22}\n\n💎 <b>{len(owned)}</b> предметов  |  💰 <b>{total:,}</b>\n\n"
-    if w:  text += "⚓︎ <b>Оружие:</b>\n" + "".join(f"  • {n}\n" for n in w) + "\n"
-    if c:  text += "⛟  <b>Машины:</b>\n" + "".join(f"  • {n}\n" for n in c) + "\n"
-    if wt: text += "⏱ <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
-    if h:  text += "🏙 <b>Дома:</b>\n"   + "".join(f"  • {n}\n" for n in h)
+    if w:  text += "➢ <b>Оружие:</b>\n" + "".join(f"  • {n}\n" for n in w) + "\n"
+    if c:  text += "➢  <b>Машины:</b>\n" + "".join(f"  • {n}\n" for n in c) + "\n"
+    if wt: text += "➢ <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
+    if h:  text += "➢ <b>Дома:</b>\n"   + "".join(f"  • {n}\n" for n in h)
 
     try:
         await query.edit_message_caption(caption=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML")
@@ -291,11 +291,11 @@ async def shop_callback(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         owned  = get_owned_items(user_id)
         coins  = player[0] if player else 0
         keyboard = [[
-            InlineKeyboardButton("⚓︎ Оружие",       callback_data="shop_cat_weapons"),
-            InlineKeyboardButton("⛟ Машины",        callback_data="shop_cat_cars"),
+            InlineKeyboardButton("➢ Оружие",       callback_data="shop_cat_weapons"),
+            InlineKeyboardButton("➢ Машины",        callback_data="shop_cat_cars"),
         ],[
-            InlineKeyboardButton("⏱ Часы",          callback_data="shop_cat_watches"),
-            InlineKeyboardButton("🏙 Недвижимость", callback_data="shop_cat_houses"),
+            InlineKeyboardButton("➢ Часы",          callback_data="shop_cat_watches"),
+            InlineKeyboardButton("➢ Недвижимость", callback_data="shop_cat_houses"),
         ],[
             InlineKeyboardButton("➢ Моя коллекция", callback_data="shop_inventory"),
         ]]
@@ -359,9 +359,9 @@ async def inventory_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     total = sum(ALL_ITEMS[i]["price"] for i in owned if i in ALL_ITEMS)
 
     text = f"<b>[ Коллекция ]</b>\n{'─'*22}\n\n💎 <b>{len(owned)}</b> предм. | 💰 <b>{total:,}</b>\n\n"
-    if w:  text += "⚓︎ <b>Оружие:</b>\n" + "".join(f"  • {n}\n" for n in w) + "\n"
-    if c:  text += "⛟ <b>Машины:</b>\n" + "".join(f"  • {n}\n" for n in c) + "\n"
-    if wt: text += "⏱ <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
-    if h:  text += "🏙 <b>Дома:</b>\n"   + "".join(f"  • {n}\n" for n in h)
+    if w:  text += "➢ <b>Оружие:</b>\n" + "".join(f"  • {n}\n" for n in w) + "\n"
+    if c:  text += "➢ <b>Машины:</b>\n" + "".join(f"  • {n}\n" for n in c) + "\n"
+    if wt: text += "➢ <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
+    if h:  text += "➢ <b>Дома:</b>\n"   + "".join(f"  • {n}\n" for n in h)
 
     await send_photo_message(ctx.bot, update.effective_chat.id, "treasury", text)
