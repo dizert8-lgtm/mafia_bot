@@ -361,7 +361,7 @@ async def inventory_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = f"<b>[ Коллекция ]</b>\n{'─'*22}\n\n💎 <b>{len(owned)}</b> предм. | 💰 <b>{total:,}</b>\n\n"
     if w:  text += "➢ <b>Оружие:</b>\n" + "".join(f"  • {n}\n" for n in w) + "\n"
     if c:  text += "➢ <b>Машины:</b>\n" + "".join(f"  • {n}\n" for n in c) + "\n"
-    if wt: text += "➢ <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
+    if wt: text += "➢g <b>Часы:</b>\n"   + "".join(f"  • {n}\n" for n in wt) + "\n"
     if h:  text += "➢ <b>Дома:</b>\n"   + "".join(f"  • {n}\n" for n in h)
 
     await send_photo_message(ctx.bot, update.effective_chat.id, "treasury", text)
