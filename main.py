@@ -656,7 +656,7 @@ def main():
     init_shop_tables()
     init_battle_tables()
 
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(TOKEN).job_queue(None).build()
     async def on_startup(app):
         await check_passive_income(app.bot)
 
