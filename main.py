@@ -28,6 +28,8 @@ from clan_system import (
     leave_clan, handle_leave, demote
 )
 from shop import init_shop_tables, shop_main, shop_callback, inventory_cmd
+from battle import init_battle_tables, declare_battle, battle_status, set_heir, battle_callback
+
 
 TOKEN    = os.getenv("TOKEN")
 ADMIN_ID = 6353819309
@@ -652,6 +654,7 @@ def main():
     init_economy_tables()
     init_clan_system_tables()
     init_shop_tables()
+    init_battle_tables()
 
     app = Application.builder().token(TOKEN).build()
     async def on_startup(app):
@@ -660,6 +663,10 @@ def main():
     app.post_init = on_startup
 
     # Публичные команды
+    app.add_handler(CallbackQueryHandler(battle_callback, pattern="^(battle_join_|battle_support_|heir_vote_)"))
+    app.add_handler(CommandHandler("mf_battle", declare_battle))
+    app.add_handler(CommandHandler("mf_battle_status", battle_status))
+    app.add_handler(CommandHandler("mf_heir", set_heir))
     app.add_handler(CommandHandler("mf_leave",  leave_clan))
     app.add_handler(CommandHandler("mf_shop",      shop_main))
     app.add_handler(CommandHandler("mf_inventory", inventory_cmd))
